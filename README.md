@@ -1,6 +1,8 @@
 >### WireGuard Patch Instructions
 >
->A working patch for WireGuard is included. To apply it:
+>This branch includes a proper-ish WireGuard client.
+>
+>If you want to apply this to an already existing OpenIPC firmware repository, you can do so by using the included `wireguard.patch` file:
 >
 >1. Copy the `wireguard.patch` file into your local OpenIPC firmware folder.
 >2. Run:
@@ -11,7 +13,7 @@
 >#### Configuration Notes
 >
 >
->You will need to replace the following placeholders with your actual values in `general/overlay/root/wireguard` after applying the patch
+>You will need to replace the following placeholders with your actual values in `general/overlay/root/wireguard`
 >
 >- `PrivateKey`
 >- `PresharedKey`
