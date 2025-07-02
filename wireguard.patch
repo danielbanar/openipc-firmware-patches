@@ -1,0 +1,538 @@
+diff --git a/general/overlay/etc/init.d/S80wireguard b/general/overlay/etc/init.d/S80wireguard
+new file mode 100755
+index 00000000..b09d2bb9
+--- /dev/null
++++ b/general/overlay/etc/init.d/S80wireguard
+@@ -0,0 +1,30 @@
++#!/bin/sh
++
++if [ -e /root/wireguard ]; then
++	. /root/wireguard
++fi
++
++case "$1" in
++	start)
++		if [ "$enabled" = "true" ]; then
++			echo "Starting Wireguard..."
++			update_wg
++			sleep 1
++			cat /etc/wireguard.conf
++			cat /etc/network/interfaces.d/wg0
++			ifup wg0
++		else
++			echo "Wireguard is disabled in /root/wireguard"
++			exit 1
++		fi
++		;;
++
++	stop)
++		echo "Stopping Wireguard..."
++		;;
++
++	*)
++		echo "Usage: $0 {start|stop}"
++		exit 1
++		;;
++esac
+diff --git a/general/overlay/etc/wireguard.conf b/general/overlay/etc/wireguard.conf
+index 0c16563d..4f8c7c27 100644
+--- a/general/overlay/etc/wireguard.conf
++++ b/general/overlay/etc/wireguard.conf
+@@ -1,10 +1,9 @@
+ [Interface]
+ PrivateKey = *
+-ListenPort = *
+ 
+ [Peer]
+-AllowedIPs = 10.8.0.0/24
+-Endpoint = *:51820
+-PersistentKeepalive = 25
+-PresharedKey = *
+ PublicKey = *
++PresharedKey = *
++Endpoint = 69.69.69.69:51820
++PersistentKeepalive = 25
++AllowedIPs = 0.0.0.0/0, ::0/0, 192.168.1.0/24
+diff --git a/general/overlay/root/wireguard b/general/overlay/root/wireguard
+new file mode 100644
+index 00000000..f61bac3c
+--- /dev/null
++++ b/general/overlay/root/wireguard
+@@ -0,0 +1,6 @@
++enabled=true
++domain=example.duckdns.org
++IP=10.10.0.7
++PublicKey="abcdefghijklmnopqrstuvwxyz123456789="
++PresharedKey="abcdefghijklmnopqrstuvwxyz123456789="
++PrivateKey="abcdefghijklmnopqrstuvwxyz123456789="
+diff --git a/general/overlay/usr/sbin/update_wg b/general/overlay/usr/sbin/update_wg
+new file mode 100755
+index 00000000..daa86b95
+--- /dev/null
++++ b/general/overlay/usr/sbin/update_wg
+@@ -0,0 +1,50 @@
++#!/bin/sh
++
++CONFIG_FILE="/etc/wireguard.conf"
++INTERFACES_FILE="/etc/network/interfaces.d/wg0"
++CONFIG_TXT_FILE="/root/wireguard"
++
++# Load configuration as shell variables
++if [ -e "$CONFIG_TXT_FILE" ]; then
++    . "$CONFIG_TXT_FILE"
++else
++    echo "Error: Config file $CONFIG_TXT_FILE not found."
++    exit 1
++fi
++
++# Optional control flag
++if [ "$enabled" != "true" ]; then
++    echo "WireGuard not enabled — exiting."
++    exit 0
++fi
++
++# Validate required vars
++for var in domain PrivateKey PublicKey PresharedKey IP; do
++    eval val=\$$var
++    [ -z "$val" ] && { echo "Error: Missing variable $var in $CONFIG_TXT_FILE."; exit 1; }
++done
++
++# Resolve domain to IP
++RESOLVED_IP=$(nslookup "$domain" | awk '/^Address: / { print $2 }' | tail -n1)
++[ -z "$RESOLVED_IP" ] && { echo "Error: Could not resolve $domain"; exit 1; }
++
++# Update /etc/wireguard.conf
++if [ -f "$CONFIG_FILE" ]; then
++    sed -i -E "s|^(Endpoint[ \t]*=[ \t]*)[0-9.]+(:[0-9]+)$|\1$RESOLVED_IP\2|" "$CONFIG_FILE"
++    sed -i -E "s|^(PrivateKey[ \t]*=[ \t]*).*$|\1$PrivateKey|" "$CONFIG_FILE"
++    sed -i -E "s|^(PublicKey[ \t]*=[ \t]*).*$|\1$PublicKey|" "$CONFIG_FILE"
++    sed -i -E "s|^(PresharedKey[ \t]*=[ \t]*).*$|\1$PresharedKey|" "$CONFIG_FILE"
++    echo "Updated $CONFIG_FILE."
++else
++    echo "Error: $CONFIG_FILE not found."
++    exit 1
++fi
++
++# Update /etc/network/interfaces.d/wg0
++if [ -f "$INTERFACES_FILE" ]; then
++    sed -i -E "s|^( *address[ \t]+)[0-9.]+|\1$IP|" "$INTERFACES_FILE"
++    echo "Updated $INTERFACES_FILE."
++else
++    echo "Error: $INTERFACES_FILE not found."
++    exit 1
++fi
+\ No newline at end of file
+diff --git a/general/overlay/var/www/cgi-bin/ext-wireguard.cgi b/general/overlay/var/www/cgi-bin/ext-wireguard.cgi
+new file mode 100755
+index 00000000..4244ca86
+--- /dev/null
++++ b/general/overlay/var/www/cgi-bin/ext-wireguard.cgi
+@@ -0,0 +1,70 @@
++#!/usr/bin/haserl
++<%in p/common.cgi %>
++
++<%
++page_title="Wireguard Editor"
++config_file="/root/wireguard"
++
++if [ "$REQUEST_METHOD" = "POST" ]; then
++    case "$POST_action" in
++        editconfig)
++            NEW_CONTENT="$POST_content"
++            if printf "%s" "$NEW_CONTENT" > "$config_file"; then
++                redirect_back "success" "Config file updated successfully"
++            else
++                redirect_back "error" "Failed to write config file"
++            fi
++            exit
++            ;;
++    esac
++    exit
++fi
++%>
++
++<%in p/header.cgi %>
++
++<div class="row g-4">
++    <div class="col-12 col-md-6">
++        <!-- Config Editor -->
++        <form action="<%= $SCRIPT_NAME %>" method="post">
++            <% field_hidden "action" "editconfig" %>
++            <div class="mb-3">
++                <label class="form-label">Edit /root/wireguard:</label>
++                <textarea class="form-control font-monospace w-100" 
++                         name="content" 
++                         rows="20"
++                         style="width: 100%"><%
++                    if [ -f "$config_file" ]; then
++                        cat "$config_file" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g'
++                    else
++                        echo "Config file not found!"
++                    fi
++                %></textarea>
++            </div>
++            <% button_submit "Save Changes" "primary" %>
++        </form>
++    </div>
++
++    <div class="col-12 col-md-6">
++        <!-- File displays -->
++        <div class="card border-0 mb-4">
++            <div class="card-header bg-transparent border-0 p-0">
++                <h6 class="text-muted">/etc/wireguard.conf</h6>
++            </div>
++            <div class="card-body p-0">
++                <pre class="m-0"><% ex "cat /etc/wireguard.conf" %></pre>
++            </div>
++        </div>
++
++        <div class="card border-0">
++            <div class="card-header bg-transparent border-0 p-0">
++                <h6 class="text-muted">/etc/network/interfaces.d/wg0</h6>
++            </div>
++            <div class="card-body p-0">
++                <pre class="m-0"><% ex "cat /etc/network/interfaces.d/wg0" %></pre>
++            </div>
++        </div>
++    </div>
++</div>
++
++<%in p/footer.cgi %>
+\ No newline at end of file
+diff --git a/general/overlay/var/www/cgi-bin/p/header.cgi b/general/overlay/var/www/cgi-bin/p/header.cgi
+new file mode 100755
+index 00000000..fccaf033
+--- /dev/null
++++ b/general/overlay/var/www/cgi-bin/p/header.cgi
+@@ -0,0 +1,133 @@
++#!/usr/bin/haserl
++Content-type: text/html; charset=UTF-8
++Cache-Control: no-store
++Pragma: no-cache
++
++<!DOCTYPE html>
++<html lang="en" data-bs-theme="<%= ${webui_theme:=dark} %>">
++<head>
++	<meta charset="utf-8">
++	<meta name="viewport" content="width=device-width, initial-scale=1">
++	<title><% html_title %></title>
++	<link rel="stylesheet" href="/a/bootstrap.min.css">
++	<link rel="stylesheet" href="/a/bootstrap.override.css">
++	<script src="/a/bootstrap.bundle.min.js"></script>
++	<script src="/a/main.js"></script>
++</head>
++
++<body id="page-<%= $pagename %>" class="<%= $fw_variant %>">
++	<nav class="navbar navbar-expand-lg bg-body-tertiary">
++		<div class="container">
++			<a class="navbar-brand" href="status.cgi"><img alt="Image: OpenIPC logo" height="32" src="/a/logo.svg"><span class="x-small ms-1"><%= $fw_variant %></span></a>
++			<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
++				<span class="navbar-toggler-icon"></span>
++			</button>
++			<div class="collapse navbar-collapse justify-content-end" id="navbarNav">
++				<ul class="navbar-nav">
++					<li class="nav-item dropdown">
++						<a aria-expanded="false" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" id="dropdownInformation" role="button">Information</a>
++						<ul aria-labelledby="dropdownInformation" class="dropdown-menu">
++							<li><a class="dropdown-item" href="status.cgi">Status</a></li>
++							<li><hr class="dropdown-divider"></li>
++							<li><a class="dropdown-item" href="info-majestic.cgi">Majestic</a></li>
++							<li><a class="dropdown-item" href="info-kernel.cgi">Kernel</a></li>
++							<li><a class="dropdown-item" href="info-overlay.cgi">Overlay</a></li>
++						</ul>
++					</li>
++					<li class="nav-item dropdown">
++						<a aria-expanded="false" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" id="dropdownMajestic" role="button">Majestic</a>
++						<ul aria-labelledby="dropdownMajestic" class="dropdown-menu">
++							<li><a class="dropdown-item" href="mj-settings.cgi">Settings</a></li>
++							<li><hr class="dropdown-divider"></li>
++							<li><a class="dropdown-item" href="mj-configuration.cgi">Configuration</a></li>
++							<li><a class="dropdown-item" href="mj-endpoints.cgi">Endpoints</a></li>
++						</ul>
++					</li>
++					<li class="nav-item dropdown">
++						<a aria-expanded="false" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" id="dropdownSettings" role="button">Firmware</a>
++						<ul aria-labelledby="dropdownSettings" class="dropdown-menu">
++							<li><a class="dropdown-item" href="fw-network.cgi">Network</a></li>
++							<li><a class="dropdown-item" href="fw-time.cgi">Time</a></li>
++							<li><a class="dropdown-item" href="fw-interface.cgi">Interface</a></li>
++							<li><hr class="dropdown-divider"></li>
++							<li><a class="dropdown-item" href="fw-update.cgi">Update</a></li>
++							<li><a class="dropdown-item" href="fw-settings.cgi">Settings</a></li>
++						</ul>
++					</li>
++					<li class="nav-item dropdown">
++						<a aria-expanded="false" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" id="dropdownTools" role="button">Tools</a>
++						<ul aria-labelledby="dropdownTools" class="dropdown-menu">
++							<li><a class="dropdown-item" href="tool-runtime-settings.cgi">Camera runtime settings</a></li>
++							<li><a class="dropdown-item" href="tool-console.cgi">Console</a></li>
++							<li><a class="dropdown-item" href="tool-files.cgi">Files</a></li>
++							<% if [ -e /dev/mmcblk0 ]; then %>
++								<li><a class="dropdown-item" href="tool-sdcard.cgi">SDcard</a></li>
++							<% fi %>
++						</ul>
++					</li>
++					<li class="nav-item dropdown">
++						<a aria-expanded="false" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" id="dropdownExtensions" role="button">Extensions</a>
++						<ul aria-labelledby="dropdownExtensions" class="dropdown-menu dropdown-menu-lg-end">
++							<li><a class="dropdown-item" href="ext-wireguard.cgi">Wireguard</a></li>
++							<li><a class="dropdown-item" href="ext-openwall.cgi">OpenWall</a></li>
++							<li><a class="dropdown-item" href="ext-telegram.cgi">Telegram</a></li>
++							<li><a class="dropdown-item" href="ext-tunnel.cgi">Tunnel</a></li>
++							<li><hr class="dropdown-divider"></li>
++							<li><a class="dropdown-item" href="ext-proxy.cgi">Proxy</a></li>
++						</ul>
++					</li>	
++					<li class="nav-item"><a class="nav-link" href="preview.cgi">Preview</a></li>
++				</ul>
++			</div>
++		</div>
++	</nav>
++
++	<main class="pb-4">
++		<div class="container" style="min-height: 85vh">
++			<div class="row mt-1 x-small">
++				<div class="col-lg-2">
++					<div id="pb-memory" class="progress my-1" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"><div class="progress-bar"></div></div>
++					<div id="pb-overlay" class="progress my-1" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"><div class="progress-bar"></div></div>
++				</div>
++
++				<div class="col-md-6 mb-2">
++					<%= $(signature) %>
++				</div>
++
++				<div class="col-1" id="daynight_value"></div>
++				<div class="col-md-4 col-lg-3 mb-2 text-end">
++					<div id="time-now"></div>
++					<div class="text-secondary" id="soc-temp"></div>
++				</div>
++			</div>
++
++<% if [ -z "$network_gateway" ]; then %>
++<div class="alert alert-warning">
++	<p class="mb-0">Internet connection not available, please <a href="fw-network.cgi">check your network settings</a>.</p>
++</div>
++<% fi %>
++
++<% if [ "$network_macaddr" = "00:00:23:34:45:66" ] && [ -f /etc/shadow- ] && [ -n $(grep root /etc/shadow- | cut -d: -f2) ]; then %>
++<div class="alert alert-danger">
++	<%in p/address.cgi %>
++</div>
++<% fi %>
++
++<% if [ ! -e $(get_config) ]; then %>
++<div class="alert alert-danger">
++	<p class="mb-0">Majestic configuration not found, please <a href="mj-configuration.cgi">check your Majestic settings</a>.</p>
++</div>
++<% fi %>
++
++<% if [ "$(cat /etc/TZ)" != "$TZ" ] || [ -e /tmp/system-reboot ]; then %>
++<div class="alert alert-danger">
++	<h3>Warning.</h3>
++	<p>System settings have been updated, restart to apply pending changes.</p>
++	<span class="d-flex gap-3">
++		<a class="btn btn-danger" href="fw-restart.cgi">Restart camera</a>
++	</span>
++</div>
++<% fi %>
++
++<h2><%= $page_title %></h2>
++<% log_read %>
+diff --git a/general/overlay/var/www/cgi-bin/tool-runtime-settings.cgi b/general/overlay/var/www/cgi-bin/tool-runtime-settings.cgi
+new file mode 100755
+index 00000000..fb1ddeb2
+--- /dev/null
++++ b/general/overlay/var/www/cgi-bin/tool-runtime-settings.cgi
+@@ -0,0 +1,191 @@
++#!/usr/bin/haserl
++<%in p/common.cgi %>
++
++<%
++page_title="Camera runtime settings"
++
++if [ "$REQUEST_METHOD" = "POST" ]; then
++    case "$POST_action" in
++        setfps)
++            if echo "$POST_fps" | grep -qE '^[0-9]+$' && [ "$POST_fps" -ge 10 ] && [ "$POST_fps" -le 60 ]; then
++                echo "setfps 0 $POST_fps" > /proc/mi_modules/mi_sensor/mi_sensor0
++                echo "HTTP/1.1 200 OK"
++                echo "Content-type: text/plain"
++                echo ""
++                echo "$POST_fps"
++                exit
++            fi
++            ;;
++        setbitrate)
++            if echo "$POST_bitrate" | grep -qE '^[0-9]+$' && [ "$POST_bitrate" -ge 0 ] && [ "$POST_bitrate" -le 8192 ]; then
++                curl -s "http://localhost/api/v1/set?video0.bitrate=$POST_bitrate" >/dev/null
++                echo "HTTP/1.1 200 OK"
++                echo "Content-type: text/plain"
++                echo ""
++                echo "$POST_bitrate"
++                exit
++            fi
++            ;;
++        setresolution)
++            valid_resolutions="1920x1080 1280x720 854x480 1440x1080 960x720 640x480"
++            if echo "$valid_resolutions" | grep -qw "$POST_resolution"; then
++                yaml-cli -s .video0.size "$POST_resolution"
++                echo "HTTP/1.1 200 OK"
++                echo "Content-type: text/plain"
++                echo ""
++                echo "$POST_resolution"
++                exit
++            fi
++            ;;
++        restartmjpeg)
++            if killall -1 majestic; then
++                echo "HTTP/1.1 200 OK"
++                echo "Content-type: text/plain"
++                echo ""
++                echo "Service restarted successfully"
++                exit
++            else
++                echo "HTTP/1.1 500 Internal Server Error"
++                echo "Content-type: text/plain"
++                echo ""
++                echo "Failed to restart service"
++                exit
++            fi
++            ;;
++    esac
++    exit
++fi
++%>
++
++<%in p/header.cgi %>
++
++<style>
++input[type="range"], select {
++    outline: none;
++    border: none;
++    box-shadow: none;
++    margin: 15px 0;
++}
++.control-group {
++    margin-bottom: 25px;
++}
++.resolution-select {
++    width: 100%;
++    padding: 8px;
++    border-radius: 4px;
++    border: 1px solid #ddd;
++}
++.button_submit {
++    margin-top: 20px;
++    width: 100%;
++    padding: 10px;
++    background-color: #dc3545;
++    color: white;
++    border: none;
++    border-radius: 4px;
++    cursor: pointer;
++}
++.button_submit:hover {
++    background-color: #c82333;
++}
++</style>
++
++<script>
++function updateControl(type, value) {
++    fetch(window.location.href, {
++        method: 'POST',
++        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
++        body: `action=set${type}&${type}=${value}`
++    })
++    .then(response => response.text())
++    .then(newValue => {
++        const element = document.getElementById(`${type}Value`);
++        if (element) {
++            element.textContent = `${newValue}${type === 'fps' ? ' FPS' : ' kbps'}`;
++        }
++    })
++    .catch(error => console.error('Error:', error));
++}
++
++function setResolution(value) {
++    fetch(window.location.href, {
++        method: 'POST',
++        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
++        body: `action=setresolution&resolution=${value}`
++    })
++    .then(response => response.text())
++    .then(res => {
++        document.getElementById('currentResolution').textContent = res;
++    })
++    .catch(error => console.error('Error:', error));
++}
++
++function restartService() {
++    fetch(window.location.href, {
++        method: 'POST',
++        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
++        body: 'action=restartmjpeg'
++    })
++    .catch(error => console.error('Error:', error));
++}
++</script>
++
++<div class="container mt-5">
++    <div class="card border-0">
++        <div class="card-body p-3">
++            <!-- FPS Control -->
++            <div class="control-group">
++                <div class="d-flex align-items-center gap-3">
++                    <input type="range" 
++                           class="form-range" 
++                           id="fpsSlider"
++                           min="10" 
++                           max="60" 
++                           value="30"
++                           oninput="updateControl('fps', this.value)">
++                    <span class="badge bg-primary fs-5" id="fpsValue">30 FPS</span>
++                </div>
++            </div>
++
++            <!-- Bitrate Control -->
++            <div class="control-group">
++                <div class="d-flex align-items-center gap-3">
++                    <input type="range" 
++                           class="form-range" 
++                           id="bitrateSlider"
++                           min="0" 
++                           max="8192" 
++                           step="256"
++                           value="0"
++                           oninput="updateControl('bitrate', this.value)">
++                    <span class="badge bg-success fs-5" id="bitrateValue">0 kbps</span>
++                </div>
++            </div>
++
++            <!-- Resolution Selector -->
++            <div class="control-group">
++                <label class="form-label">Video Resolution:</label>
++                <select class="resolution-select" onchange="setResolution(this.value)">
++                    <option value="1920x1080">1920x1080 16:9</option>
++                    <option value="1280x720">1280x720 16:9</option>
++                    <option value="854x480">854x480 16:9</option>
++                    <option value="1440x1080">1440x1080 4:3</option>
++                    <option value="960x720">960x720 4:3</option>
++                    <option value="640x480">640x480 4:3</option>
++                </select>
++                <div class="mt-2">
++                    Current: <span class="badge bg-info" id="currentResolution">-</span>
++                </div>
++            </div>
++
++            <!-- Restart Service Button -->
++            <div class="control-group">
++                <button class="button_submit" onclick="restartService()">
++                    Restart Majestic
++                </button>
++            </div>
++        </div>
++    </div>
++</div>
++
++<%in p/footer.cgi %>
+\ No newline at end of file

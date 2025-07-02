@@ -1,0 +1,6 @@
+enabled=true
+domain=example.duckdns.org
+IP=10.10.0.7
+PublicKey="abcdefghijklmnopqrstuvwxyz123456789="
+PresharedKey="abcdefghijklmnopqrstuvwxyz123456789="
+PrivateKey="abcdefghijklmnopqrstuvwxyz123456789="
