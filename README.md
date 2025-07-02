@@ -1,3 +1,40 @@
+### WireGuard Patch Instructions
+
+A working patch for WireGuard is included. To apply it:
+
+1. Copy the `wireguard.patch` file into your local OpenIPC firmware folder.
+2. Run:
+   ```bash
+   git apply wireguard.patch
+   ```
+
+#### Configuration Notes
+
+
+You will need to replace the following placeholders with your actual values in `general/overlay/root/wireguard` after applying the patch
+
+- `PrivateKey`
+- `PresharedKey`
+- `PublicKey`
+- Domain or public IP address
+- Virtual client IP
+Alternatively, you can edit the values directly in the patch file before applying it.
+
+If you are using PiVPN, you can find these values in your client configuration file, typically located at:
+
+```
+~/home/configs/<client.conf>
+```
+#### Additional Build Configuration
+
+If you are **not using the Ultimate version**, add the following lines to your `defconfig` to ensure WireGuard is properly included:
+
+```bash
+BR2_PACKAGE_WIREGUARD_LINUX_COMPAT=y
+BR2_PACKAGE_WIREGUARD_TOOLS=y
+```
+
+
 ![OpenIPC logo][logo]
 
 ## Alternative open firmware for your IP camera
