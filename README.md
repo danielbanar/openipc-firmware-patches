@@ -23,7 +23,7 @@
 >If you are using PiVPN, you can find these values in your client configuration file, typically located at:
 >
 >```
->~/home/configs/<client.conf>
+>~/home/<user>/configs/<client.conf>
 >```
 >#### Additional Build Configuration
 >
