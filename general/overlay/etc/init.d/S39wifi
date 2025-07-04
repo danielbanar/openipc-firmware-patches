@@ -1,0 +1,31 @@
+#!/bin/sh
+
+if [ -e /etc/wifi ]; then
+	. /etc/wifi
+fi
+
+case "$1" in
+	start)
+		if [ "$enabled" = "true" ]; then
+		echo "Starting wifi..."
+		devmem 0x100c0080 32 0x0
+		gpio clear 7
+		modprobe 8733bu rtw_tx_pwr_by_rate=0 rtw_tx_pwr_lmt_enable=0
+		sleep 1
+		wpa_supplicant -B -i wlan0 -c /etc/wpa_supplicant.conf
+		ifup wlan0
+		else
+			echo "Wifi is disabled in /etc/wifi"
+			exit 1
+		fi
+		;;
+
+	stop)
+		echo "Stopping wifi..."
+		;;
+
+	*)
+		echo "Usage: $0 {start|stop}"
+		exit 1
+		;;
+esac
