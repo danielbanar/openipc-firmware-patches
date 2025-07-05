@@ -42,7 +42,7 @@
 >| 1856x1044             | 16:9           | 59fps              |        1920 |        1080 |              60                      | Yes            |
 >
 >#### Caution
-> With these increased framerates the camera starts to heat up more so make sure its not running hot and maybe put a heatsink on.
+> With these increased framerates the camera starts to heat up more, make sure its not running hot and maybe put on a heatsink.
 ---
 
 ![OpenIPC logo][logo]
