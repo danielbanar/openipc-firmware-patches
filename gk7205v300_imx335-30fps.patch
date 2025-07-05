@@ -1,0 +1,160 @@
+diff --git a/general/overlay/etc/majestic.yaml b/general/overlay/etc/majestic.yaml
+new file mode 100644
+index 00000000..9008b89f
+--- /dev/null
++++ b/general/overlay/etc/majestic.yaml
+@@ -0,0 +1,80 @@
++system:
++  webPort: 80
++  httpsPort: 443
++  logLevel: debug
++  buffer: 1024
++  plugins: false
++  unsafe: true
++isp:
++  antiFlicker: disabled
++  blkCnt: 4
++  dis: false
++  memMode: reduction
++  rawMode: none
++  sensorConfig: /etc/sensors/imx335_30fps.ini
++  slowShutter: disabled
++image:
++  mirror: false
++  flip: false
++  rotate: 0
++  contrast: 50
++  hue: 50
++  saturation: 50
++  luminance: 50
++video0:
++  enabled: true
++  codec: h265
++  fps: 35
++  bitrate: 10240
++  rcMode: cbr
++  gopSize: 1
++  profile: main
++  size: 1920x1440
++video1:
++  enabled: false
++  codec: h264
++  size: 704x576
++  fps: 15
++jpeg:
++  enabled: false
++  qfactor: 50
++  fps: 5
++  rtsp: false
++osd:
++  enabled: false
++  font: /usr/share/fonts/truetype/UbuntuMono-Regular.ttf
++  template: '%d.%m.%Y %H:%M:%S'
++  posX: 16
++  posY: 16
++audio:
++  enabled: true
++  volume: 50
++  srate: 48000
++  codec: aac
++  outputEnabled: false
++  outputVolume: 30
++  speakerPinInvert: false
++rtsp:
++  enabled: true
++  port: 554
++nightMode:
++  colorToGray: true
++  irCutSingleInvert: false
++  lightMonitor: false
++  lightSensorInvert: false
++motionDetect:
++  enabled: false
++  visualize: false
++  debug: false
++records:
++  enabled: false
++  path: /mnt/mmcblk0p1/%F
++  split: 20
++  maxUsage: 95
++outgoing:
++  enabled: false
++watchdog:
++  enabled: true
++  timeout: 300
++hls:
++  enabled: false
+diff --git a/general/package/goke-osdrv-gk7205v200/files/sensor/config/imx335_30fps.ini b/general/package/goke-osdrv-gk7205v200/files/sensor/config/imx335_30fps.ini
+new file mode 100755
+index 00000000..39e8858f
+--- /dev/null
++++ b/general/package/goke-osdrv-gk7205v200/files/sensor/config/imx335_30fps.ini
+@@ -0,0 +1,52 @@
++[sensor]
++Sensor_type=stSnsImx335Obj
++Mode=WDR_MODE_NONE
++DllFile=libsns_imx335ex.so
++
++[mode]
++input_mode=INPUT_MODE_MIPI
++raw_bitness=10
++
++[mipi]
++lane_id = 0|1|2|3|-1|-1|-1|-1|          ;lane_id: -1 - disable
++
++[isp_image]
++Isp_FrameRate=35
++Isp_Bayer=BAYER_RGGB
++
++[vi_dev]
++Input_mod=VI_MODE_MIPI
++ 
++#
++# uncomment either DevRect pair to select sensor mode
++#
++
++#2592x1520 50fps , slightly cropped vertically to 16:9
++#DevRect_w = 2592
++#DevRect_h = 1520
++#Isp_FrameRate=52 #max supported on hi3516ev300 when majestic is set to 1920x1080 52fps
++
++#stock fullscale mode boosted to 40fps
++DevRect_w = 2592
++DevRect_h = 1944
++
++#1080p cropped, 
++#DevRect_w = 1920
++#DevRect_h = 1080
++#Isp_FrameRate=90 #can work at 90fps only when majestic is set to 1280x720 90fps !!!
++#Max Isp_FrameRate=55 for 1920x1080 
++
++#binning  max 65fps, in majestic.yaml set 1296x972 or 1280x720
++#DevRect_w = 1296
++#DevRect_h = 972
++#Isp_FrameRate=68 # max supported value on hi356ev300 at 1280x720
++
++#Current, set by channels.sh 
++#DevRect_w=2592
++#DevRect_h=1944
++
++
++DevRect_x=200
++DevRect_y=20
++
++FullLinesStd=1375
+diff --git a/general/package/goke-osdrv-gk7205v200/files/sensor/libsns_imx335ex.so b/general/package/goke-osdrv-gk7205v200/files/sensor/libsns_imx335ex.so
+new file mode 100755
+index 00000000..aedde4de
+Binary files /dev/null and b/general/package/goke-osdrv-gk7205v200/files/sensor/libsns_imx335ex.so differ
+diff --git a/general/package/goke-osdrv-gk7205v200/goke-osdrv-gk7205v200.mk b/general/package/goke-osdrv-gk7205v200/goke-osdrv-gk7205v200.mk
+index 61a261a2..de405995 100644
+--- a/general/package/goke-osdrv-gk7205v200/goke-osdrv-gk7205v200.mk
++++ b/general/package/goke-osdrv-gk7205v200/goke-osdrv-gk7205v200.mk
+@@ -100,6 +100,7 @@ define GOKE_OSDRV_GK7205V200_INSTALL_TARGET_CMDS
+ 	$(INSTALL) -m 644 -t $(TARGET_DIR)/usr/lib/sensors $(GOKE_OSDRV_GK7205V200_PKGDIR)/files/sensor/libsns_imx327_2l.so
+ 	$(INSTALL) -m 644 -t $(TARGET_DIR)/usr/lib/sensors $(GOKE_OSDRV_GK7205V200_PKGDIR)/files/sensor/libsns_imx327.so
+ 	## $(INSTALL) -m 644 -t $(TARGET_DIR)/usr/lib/sensors $(GOKE_OSDRV_GK7205V200_PKGDIR)/files/sensor/libsns_imx335.so
++	$(INSTALL) -m 644 -t $(TARGET_DIR)/usr/lib/sensors $(GOKE_OSDRV_GK7205V200_PKGDIR)/files/sensor/libsns_imx335ex.so
+   $(INSTALL) -m 644 -t $(TARGET_DIR)/usr/lib/sensors $(GOKE_OSDRV_GK7205V200_PKGDIR)/files/sensor/libsns_mis2008.so
+ 	## $(INSTALL) -m 644 -t $(TARGET_DIR)/usr/lib/sensors $(GOKE_OSDRV_GK7205V200_PKGDIR)/files/sensor/libsns_os05a.so
+ 	## $(INSTALL) -m 644 -t $(TARGET_DIR)/usr/lib/sensors $(GOKE_OSDRV_GK7205V200_PKGDIR)/files/sensor/libsns_ov2718.so
