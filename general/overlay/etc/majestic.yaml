@@ -1,0 +1,80 @@
+system:
+  webPort: 80
+  httpsPort: 443
+  logLevel: debug
+  buffer: 1024
+  plugins: false
+  unsafe: true
+isp:
+  antiFlicker: disabled
+  blkCnt: 4
+  dis: false
+  memMode: reduction
+  rawMode: none
+  sensorConfig: /etc/sensors/imx335_30fps.ini
+  slowShutter: disabled
+image:
+  mirror: false
+  flip: false
+  rotate: 0
+  contrast: 50
+  hue: 50
+  saturation: 50
+  luminance: 50
+video0:
+  enabled: true
+  codec: h265
+  fps: 35
+  bitrate: 10240
+  rcMode: cbr
+  gopSize: 1
+  profile: main
+  size: 1920x1440
+video1:
+  enabled: false
+  codec: h264
+  size: 704x576
+  fps: 15
+jpeg:
+  enabled: false
+  qfactor: 50
+  fps: 5
+  rtsp: false
+osd:
+  enabled: false
+  font: /usr/share/fonts/truetype/UbuntuMono-Regular.ttf
+  template: '%d.%m.%Y %H:%M:%S'
+  posX: 16
+  posY: 16
+audio:
+  enabled: true
+  volume: 50
+  srate: 48000
+  codec: aac
+  outputEnabled: false
+  outputVolume: 30
+  speakerPinInvert: false
+rtsp:
+  enabled: true
+  port: 554
+nightMode:
+  colorToGray: true
+  irCutSingleInvert: false
+  lightMonitor: false
+  lightSensorInvert: false
+motionDetect:
+  enabled: false
+  visualize: false
+  debug: false
+records:
+  enabled: false
+  path: /mnt/mmcblk0p1/%F
+  split: 20
+  maxUsage: 95
+outgoing:
+  enabled: false
+watchdog:
+  enabled: true
+  timeout: 300
+hls:
+  enabled: false
