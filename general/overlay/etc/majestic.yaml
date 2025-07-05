@@ -7,11 +7,11 @@ system:
   unsafe: true
 isp:
   antiFlicker: disabled
-  blkCnt: 4
+  blkCnt: 8
   dis: false
   memMode: reduction
   rawMode: none
-  sensorConfig: /etc/sensors/imx335_30fps.ini
+  sensorConfig: /etc/sensors/imx335_fps.ini
   slowShutter: disabled
 image:
   mirror: false
@@ -24,7 +24,7 @@ image:
 video0:
   enabled: true
   codec: h265
-  fps: 35
+  fps: 45
   bitrate: 10240
   rcMode: cbr
   gopSize: 1
