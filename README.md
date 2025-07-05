@@ -1,14 +1,17 @@
 >### GK7205V300 + IMX335 FPS Patch Instructions
 >
->This patch comes with a modified driver from tipomans repository: https://github.com/tipoman9/imx335_modes.
+>This patch comes with a modified driver from tipoman's repository: https://github.com/tipoman9/imx335_modes.
 >
->I played with the setting a bit more to get these:
+>I played with the settings a bit more to get these:
 >```
->1920x1440@39fps 4:3
+>2048x1536@30fps 4:3, full sensor
+>1920x1440@39fps 4:3, full sensor
 >1920x1080@53fps 16:9, top cropped
 >1920x1080@54fps 16:9, cropped in
 >1600x900@75fps 16:9, cropped in
->1280x720@88fps 16:9 cropped in
+>1280x720@88fps 16:9, cropped in
+>2304x1296@37fps 16:9, top cropped
+>1856x1044@59fps 16:9, cropped in
 >```
 >If you want to apply this to an already existing OpenIPC firmware repository, you can do so by using the included `gk7205v300_imx335-fps.patch` file:
 >
