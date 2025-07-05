@@ -1,3 +1,57 @@
+>### WiFi Patch Instructions
+>
+>This branch includes a proper-ish WiFi with ethernet coexistence.
+>
+>If you want to apply this to an already existing OpenIPC firmware repository, you can do so by using the included `gk7205v300-wifi.patch` file:
+>
+>1. Copy the `gk7205v300-wifi.patch` file into your local OpenIPC firmware folder.
+>2. Run:
+>   ```bash
+>   git apply gk7205v300-wifi.patch
+>   ```
+>
+>#### Configuration Notes
+>
+>You will need to replace the following placeholders with your actual values in `etc/wpa_supplicant.conf`
+>```
+>network={
+>	   ssid="SSID"
+>	   psk="password"
+>}
+>```
+>This also allows you to add as many WiFi networks as you want and be able to set their priority
+>
+>You also need to set the `wlandev` environment variable using:
+>
+>```bash
+>fw_setenv wlandev tl8733bu-gk7205v300-camhi
+>```
+>
+>
+>#### Additional Build Configuration
+>
+>If you are **not using the Ultimate version**, add the following lines to your `defconfig` to ensure The WiFi drivers are properly included:
+>
+>```bash
+>BR2_PACKAGE_RTL8733BU_OPENIPC=y
+>BR2_PACKAGE_IW=y
+>```
+>
+>#### Transmit Power
+>
+>By default, the transmit power is set to 10 dB (10 mW) due to interference issues with the microphone. If this won't affect you, you can either change it to your own power or use the default by removing the line in `etc/network/interfaces.d/wlan0`:
+>
+>```
+>post-up iw dev wlan0 set txpower fixed 1000
+>```
+>
+>#### Compatibility Note
+>
+>This patch is intended for use with the CamHi GK7205V300 using the RTL8733BU WiFi chip. However, it should work with other boards as long as the correct driver is included and the `wlandev` value is properly set. A list of possible `wlandev` values can be found in `etc/wireless`.
+
+---
+
+
 ![OpenIPC logo][logo]
 
 ## Alternative open firmware for your IP camera
