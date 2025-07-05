@@ -24,6 +24,7 @@ load_config() {
 }
 
 load_modules() {
+	adapter_id=""
 	for card in $(lsusb | awk '{print $6}' | uniq); do
 		case "$card" in
 			"0bda:8812" | "0bda:881a" | "0b05:17d2" | "2357:0101" | "2604:0012")
@@ -32,10 +33,12 @@ load_modules() {
 
 			"0bda:a81a")
 				driver=8812eu
+				adapter_id="bl-m8812eu2"
 				;;
 
 			"0bda:f72b" | "0bda:b733")
 				driver=8733bu
+				adapter_id="bl-m8731bu4"
 				;;
 		esac
 	done
@@ -60,6 +63,11 @@ load_modules() {
 	if ! ifconfig "$wfb_dev" up; then
 		echo_log "Wireless driver not found!"
 		exit 1
+	fi
+
+	# Set .wireless.wlan_adapter in /etc/wfb.yaml if adapter_id is set
+	if [ -n "$adapter_id" ]; then
+		yaml-cli-multi -i /etc/wfb.yaml -s .wireless.wlan_adapter "$adapter_id"
 	fi
 }
 
@@ -127,8 +135,10 @@ start_telemetry() {
 video_settings() {
 	sensor=$(ipcinfo -s)
 	cli -s .isp.sensorConfig /etc/sensors/"$sensor"_fpv.bin
-	cli -s .isp.exposure 5
+	cli -s .isp.exposure 16
+	cli -s .video0.size 1920x1080
 	cli -s .video0.fps 60
+	cli -s .video0.gopSize 1.0
 	cli -s .video0.bitrate 8192
 	cli -s .video0.codec h265
 	cli -s .video0.rcMode cbr
