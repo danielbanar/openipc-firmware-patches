@@ -13,17 +13,16 @@ set_wireless() {
 		ifup usb0
 		ifup eth1
 	fi
-	[ -e /sys/class/net/eth0 ] && ifconfig eth0 "${net:-192.168.2.10}" hw ether "${eth:-00:00:23:34:45:66}" up
 }
 
 start() {
-	echo "Starting network..."
+	echo "Starting wireless..."
 	ifup lo
 	if [ -n "$dev" ]; then
 		set_wireless
-	else
-		ifup eth0
 	fi
+	echo "Starting ethernet..."
+	ifup eth0
 }
 
 stop() {
