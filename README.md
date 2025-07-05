@@ -1,3 +1,47 @@
+>### GK7205V300 + IMX335 FPS Patch Instructions
+>
+>This patch comes with a modified driver from tipomans repository: https://github.com/tipoman9/imx335_modes.
+>
+>I played with the setting a bit more to get these:
+>```
+>1920x1440@39fps 4:3
+>1920x1080@53fps 16:9, top cropped
+>1920x1080@54fps 16:9, cropped in
+>1600x900@75fps 16:9, cropped in
+>1280x720@88fps 16:9 cropped in
+>```
+>If you want to apply this to an already existing OpenIPC firmware repository, you can do so by using the included `gk7205v300_imx335-fps.patch` file:
+>
+>1. Copy the `gk7205v300_imx335-fps.patch` file into your local OpenIPC firmware folder.
+>2. Run:
+>   ```bash
+>   git apply gk7205v300_imx335-fps.patch
+>   ```
+>
+>#### Configuration Notes
+>
+>I included a default majestic.yaml configuration due to elements in the ISP tab of Majestic missing for some reason.
+>
+>In order to get each mode working you need to set these values:
+>
+>- In `/etc/sensors/imx335_fps.ini`: `DevRect_w`, `DevRect_h`, `Isp_FrameRate`
+>- Majestic: `Resolution`, `Framerate`
+>
+>| Majestic resolution   | Aspect Ratio   | Actual framerate   |   DevRect_w |   DevRect_h |   Isp_FrameRate & Majestic framerate | Cropped        |
+>|:----------------------|:---------------|:-------------------|------------:|------------:|-------------------------------------:|:---------------|
+>| 2048x1536             | 4:3            | 30fps              |        2592 |        1440 |              35                      |                |
+>| 1920x1440             | 4:3            | 39fps              |        2592 |        1944 |              45                      |                |
+>| 1920x1080             | 16:9           | 53fps              |        2592 |        1520 |              55                      | Yes (top only) |
+>| 1920x1080             | 16:9           | 54fps              |        1920 |        1080 |              55                      | Yes            |
+>| 1600x900              | 16:9           | 75fps              |        1920 |        1080 |              77                      | Yes            |
+>| 1280x720              | 16:9           | 88fps              |        1920 |        1080 |              90                      | Yes            |
+>| 2304x1296             | 16:9           | 37fps              |        2560 |        1440 |              38                      | Yes (top only) |
+>| 1856x1044             | 16:9           | 59fps              |        1920 |        1080 |              60                      | Yes            |
+>
+>#### Caution
+> With these increased framerates the camera starts to heat up more so make sure its not running hot and maybe put a heatsink on.
+---
+
 ![OpenIPC logo][logo]
 
 ## Alternative open firmware for your IP camera
