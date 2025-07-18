@@ -24,7 +24,7 @@
 >You also need to set the `wlandev` environment variable using:
 >
 >```bash
->fw_setenv wlandev tl8733bu-gk7205v300-camhi
+>fw_setenv wlandev rtl8733bu-gk7205v300-camhi
 >```
 >
 >
