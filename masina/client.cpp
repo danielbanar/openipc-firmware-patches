@@ -96,7 +96,7 @@ bool readConfig(const std::string& filename) {
 		std::istringstream iss(line);
 		std::string key, value;
 		if (std::getline(iss, key, '=') && std::getline(iss, value)) {
-			if (key == "host")
+			if (key == "GROUND_IP")
 				hostname = value;
 			else if (key == "LOCAL_TIMEOUT")
 				LOCAL_TIMEOUT = std::stoi(value);
@@ -205,7 +205,7 @@ void PiTelemetry()
 }
 int main()
 {
-	if (!readConfig("/root/config.txt")) {
+	if (!readConfig("/root/masina")) {
 		return 1;
 	}
 

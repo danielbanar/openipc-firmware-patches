@@ -1,22 +1,22 @@
 #!/bin/sh
-WG_CONFIG_CUSTOM="/root/wireguard"
+MASINA_CONFIG="/root/masina"
 
 # Load configuration as shell variables
-if [ -e "$WG_CONFIG_CUSTOM" ]; then
-    . "$WG_CONFIG_CUSTOM"
+if [ -e "$MASINA_CONFIG" ]; then
+    . "$MASINA_CONFIG"
 else
-    echo "Error: Config file $WG_CONFIG_CUSTOM not found." >&2
+    echo "Error: Config file $MASINA_CONFIG not found." >&2
     exit 1
 fi
 
 # Verify IP is set
-if [ -z "$IP" ]; then
-    echo "Error: IP variable not set in configuration." >&2
+if [ -z "$GROUND_IP" ]; then
+    echo "Error: GROUND_IP variable not set in configuration." >&2
     exit 1
 fi
 
 # Run yaml-cli command
-yaml-cli -s .outgoing.server "udp://$IP:2222"
+yaml-cli -s .outgoing.server "udp://$GROUND_IP:2222"
 if [ $? -eq 0 ]; then
     echo "yaml-cli command executed successfully."
     exit 0
