@@ -2,14 +2,6 @@
 >
 >This branch includes a proper-ish WiFi with ethernet coexistence.
 >
->If you want to apply this to an already existing OpenIPC firmware repository, you can do so by using the included `gk7205v300-wifi.patch` file:
->
->1. Copy the `gk7205v300-wifi.patch` file into your local OpenIPC firmware folder.
->2. Run:
->   ```bash
->   git apply gk7205v300-wifi.patch
->   ```
->
 >#### Configuration Notes
 >
 >You will need to replace the following placeholders with your actual values in `etc/wpa_supplicant.conf`
