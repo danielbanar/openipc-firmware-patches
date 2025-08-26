@@ -2,14 +2,6 @@
 >
 >This branch includes a proper-ish WireGuard client.
 >
->If you want to apply this to an already existing OpenIPC firmware repository, you can do so by using the included `wireguard.patch` file:
->
->1. Copy the `wireguard.patch` file into your local OpenIPC firmware folder.
->2. Run:
->   ```bash
->   git apply wireguard.patch
->   ```
->
 >#### Configuration Notes
 >
 >
