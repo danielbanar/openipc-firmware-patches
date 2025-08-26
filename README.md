@@ -2,8 +2,6 @@
 >
 >This branch includes a proper-ish WireGuard client.
 >
->If you want to apply this to an already existing OpenIPC firmware repository, you can do so by using the included `wireguard.patch` file:
->
 >#### Configuration Notes
 >
 >
@@ -14,7 +12,6 @@
 >- `PublicKey`
 >- Domain or public IP address
 >- Virtual client IP
->
 >
 >If you are using PiVPN, you can find these values in your client configuration file, typically located at:
 >
