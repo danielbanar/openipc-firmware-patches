@@ -4,7 +4,6 @@
 >
 >#### Configuration Notes
 >
->
 >You will need to replace the following placeholders with your actual values in `general/overlay/root/wireguard`
 >
 >- `PrivateKey`
@@ -12,8 +11,6 @@
 >- `PublicKey`
 >- Domain or public IP address
 >- Virtual client IP
->
->Alternatively, you can edit the values directly in the patch file before applying it.
 >
 >If you are using PiVPN, you can find these values in your client configuration file, typically located at:
 >
