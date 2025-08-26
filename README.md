@@ -13,13 +13,6 @@
 >2304x1296@37fps 16:9, top cropped
 >1856x1044@59fps 16:9, cropped in
 >```
->If you want to apply this to an already existing OpenIPC firmware repository, you can do so by using the included `gk7205v300_imx335-fps.patch` file:
->
->1. Copy the `gk7205v300_imx335-fps.patch` file into your local OpenIPC firmware folder.
->2. Run:
->   ```bash
->   git apply gk7205v300_imx335-fps.patch
->   ```
 >
 >#### Configuration Notes
 >
