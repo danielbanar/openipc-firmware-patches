@@ -1,31 +1,55 @@
->### WireGuard Patch Instructions
+>### OpenIPC FPV over 4G/LTE (Masina)
 >
->This branch includes a proper-ish WireGuard client.
+>This branch includes my patches such as: wireguard support, 4G/LTE modem drivers, and the masinaclient.
 >
->#### Configuration Notes
->
->
+>### Supported devieces
+>##### SoC
+>- SSC30KQ
+>- SSC338Q
+>##### Modems
+>- SIMCOM7600 series (SIM7600G-H, ...)
+>- Quectel EC25 series (EG25, EC25-EUX, ...)
+>- Other modems such as Huawei E3372 should be supported but not tested
+>### Configuration
+>##### WireGuard
 >You will need to replace the following placeholders with your actual values in `general/overlay/root/wireguard`
 >
 >- `PrivateKey`
 >- `PresharedKey`
 >- `PublicKey`
 >- Domain or public IP address
->- Virtual client IP
+>- Virtual client IP'
 >
 >If you are using PiVPN, you can find these values in your client configuration file, typically located at:
 >
 >```
 >~/home/<user>/configs/<client.conf>
 >```
->#### Additional Build Configuration
+>##### Modem
+>To set your modem set this env variable
+>`fw_setenv wlandev ec25`
+>All available modem names are in: `general/overlay/etc/wireless/modem`
 >
->If you are **not using the Ultimate version**, add the following lines to your `defconfig` to ensure WireGuard is properly included:
+>Before that you might need to change the modes, I recommend doing this on your PC, plug the modem use the serial interfaces for AT commands (usually /dev/ttyUSB2) and set the mode:
+>- EC25 ECM Mode`AT+QCFG="usbnet",1`
+>- EC25 RNDIS Mode`AT+QCFG="usbnet",3`
 >
->```bash
->BR2_PACKAGE_WIREGUARD_LINUX_COMPAT=y
->BR2_PACKAGE_WIREGUARD_TOOLS=y
->```
+>##### Masina Client (control over 4G/LTE)
+> This is my app that allows you to use serial port on your camera soc as a ELRS/CRSF receiver, so you can control it over internet and receive telemetry aswell, this requires running the server app on your GS (only Windows, Linux version not public).
+>You can also use Dual control ELRS and Masina with the ability to switch between them on the fly (If you lose ELRS link, switch to Masina) this way if you lose data completelly you can still receive GPS coordinates as telemetry from the receiver if you get close to it. This Requires extra hardware (TS5A23157 MUX board) that can be switched with a GPIO pin on your cameras SoC.
+>If you want to use regualar ELRS receiver instead, you can disable this in `root/masina` by setting `enabled=false`
+>
+>###### Config
+>Config file stored as`root/masina`:
+>```GROUND_IP=<GS Virtual IP>
+>LOCAL_TIMEOUT=<ms (switch to ELRS instead of Masina if no data received for x miliseconds, does nothing when not using dual control)>
+>FAILSAFE_TIMEOUT=<ms (Failsafe - Land or RTH after no data for x miliseconds, recommended: 5000)>
+>STABILIZE_TIMEOUT=<ms (Stabilize/Hover - Angle mode with constant throttle after no data for x miliseconds, recommended: 250)>
+>ELRS_SWITCH_PIN=<DUAL control switch GPIO pin>
+>HOVER_VALUE=<value between 1000-2000 (Throttle value when Stabilize/Hover is active)>
+```
+
+
 
 ---
 

@@ -26,22 +26,22 @@ stop() {
 }
 
 case "$1" in
-	start|stop)
-		$1
-		;;
+start | stop)
+	$1
+	;;
 
-	restart)
-		stop
-		sleep 3
-		start
-		;;
+restart)
+	stop
+	sleep 3
+	start
+	;;
 
-	reload)
-		killall -1 "$DAEMON"
-		;;
+reload)
+	killall -1 "$DAEMON"
+	;;
 
-	*)
-		echo "Usage: $0 {start|stop|restart|reload}"
-		exit 1
-		;;
+*)
+	echo "Usage: $0 {start|stop|restart|reload}"
+	exit 1
+	;;
 esac

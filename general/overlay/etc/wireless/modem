@@ -86,9 +86,18 @@ if [ "$1" = "sim7600g" ]; then
 	exit 0
 fi
 
-# EG25/EC25-xxx
-if [ "$1" = "ec25" ]; then
+# EG25/EC25-xxx (RNDIS, AT+QCFG="usbnet",3)
+if [ "$1" = "rndis-ec25" ]; then
 	modprobe rndis_host
+	modprobe option
+	sleep 2
+	ifup usb0
+	sleep 2
+	exit 0
+fi
+
+# EG25/EC25-xxx (ECM, AT+QCFG="usbnet",1)
+if [ "$1" = "ec25" ]; then
 	modprobe option
 	sleep 2
 	ifup usb0
