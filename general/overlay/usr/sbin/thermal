@@ -2,16 +2,18 @@
 while true; do
 	temp=$(tr -cd '0-9' </sys/devices/virtual/mstar/msys/TEMP_R 2>/dev/null)
 	if [ -z "$temp" ]; then
-		sleep 1
+		sleep 5
 		continue
 	fi
 	base_fps=$(yaml-cli -g .video0.fps 2>/dev/null | cut -d. -f1)
 	if [ -z "$base_fps" ] || [ "$base_fps" -le 0 ]; then
-		sleep 1
+		sleep 5
 		continue
 	fi
 	if [ "$temp" -le 70 ]; then
 		fps=$base_fps
+	elif [ "$temp" -le 80 ]; then
+		fps=$((base_fps * 3 / 4))
 	elif [ "$temp" -le 89 ]; then
 		fps=$((base_fps / 2))
 	elif [ "$temp" -le 94 ]; then
@@ -23,5 +25,5 @@ while true; do
 	fi
 	echo "setfps 0 $fps" >/proc/mi_modules/mi_sensor/mi_sensor0 2>/dev/null
 	echo "Temperature: ${temp}°C | Base FPS: ${base_fps} | Set FPS: ${fps}"
-	sleep 1
+	sleep 5
 done
