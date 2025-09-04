@@ -5,26 +5,26 @@ if [ -e /root/wireguard ]; then
 fi
 
 case "$1" in
-	start)
-		if [ "$enabled" = "true" ]; then
-			echo "Starting Wireguard..."
-			update_wg
-			sleep 1
-			cat /etc/wireguard.conf
-			cat /etc/network/interfaces.d/wg0
-			ifup wg0
-		else
-			echo "Wireguard is disabled in /root/wireguard"
-			exit 1
-		fi
-		;;
-
-	stop)
-		echo "Stopping Wireguard..."
-		;;
-
-	*)
-		echo "Usage: $0 {start|stop}"
+start)
+	if [ "$enabled" = "true" ]; then
+		echo "Starting Wireguard..."
+		update_wg
+		sleep 1
+		cat /etc/wireguard.conf
+		cat /etc/network/interfaces.d/wg0
+		ifup wg0
+	else
+		echo "Wireguard is disabled in /root/wireguard"
 		exit 1
-		;;
+	fi
+	;;
+
+stop)
+	echo "Stopping Wireguard..."
+	;;
+
+*)
+	echo "Usage: $0 {start|stop}"
+	exit 1
+	;;
 esac
