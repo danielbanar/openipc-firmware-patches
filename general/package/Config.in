@@ -133,3 +133,4 @@ source "$BR2_EXTERNAL_GENERAL_PATH/package/legacy/wifibroadcast/Config.in"
 # Daniel Banar
 source "$BR2_EXTERNAL_GENERAL_PATH/package/thermal-throttle-db/Config.in"
 source "$BR2_EXTERNAL_GENERAL_PATH/package/wireguard-db/Config.in"
+source "$BR2_EXTERNAL_GENERAL_PATH/package/gps-db/Config.in"
