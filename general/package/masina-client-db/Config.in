@@ -1,0 +1,2 @@
+config BR2_PACKAGE_MASINA_CLIENT_DB
+	bool "masina-client-db"
