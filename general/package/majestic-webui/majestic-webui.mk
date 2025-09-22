@@ -4,7 +4,7 @@
 #
 ################################################################################
 
-MAJESTIC_WEBUI_SITE = $(call github,openipc,majestic-webui,$(MAJESTIC_WEBUI_VERSION))
+MAJESTIC_WEBUI_SITE = $(call github,danielbanar,majestic-webui,$(MAJESTIC_WEBUI_VERSION))
 MAJESTIC_WEBUI_VERSION = HEAD
 MAJESTIC_WEBUI_LICENSE = MIT
 MAJESTIC_WEBUI_LICENSE_FILES = LICENSE
