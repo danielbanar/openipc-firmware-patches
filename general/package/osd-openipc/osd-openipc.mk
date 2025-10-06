@@ -4,7 +4,7 @@
 #
 ################################################################################
 
-OSD_OPENIPC_SITE = $(call github,openipc,osd,$(OSD_OPENIPC_VERSION))
+OSD_OPENIPC_SITE = $(call github,danielbanar,openipc-osd,$(OSD_OPENIPC_VERSION))
 OSD_OPENIPC_VERSION = HEAD
 OSD_OPENIPC_LICENSE = MIT
 OSD_OPENIPC_LICENSE_FILES = LICENSE
