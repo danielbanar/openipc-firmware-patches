@@ -5,7 +5,12 @@
 ################################################################################
 
 THERMAL_THROTTLE_DB_SITE = $(call github,danielbanar,openipc-thermal,$(THERMAL_THROTTLE_DB_VERSION))
-THERMAL_THROTTLE_DB_VERSION = HEAD
+
+ifneq ($(findstring dash,$(OPENIPC_VARIANT)),)
+	THERMAL_THROTTLE_DB_VERSION = dash
+else
+	THERMAL_THROTTLE_DB_VERSION = HEAD
+endif
 
 define THERMAL_THROTTLE_DB_INSTALL_TARGET_CMDS
 	$(INSTALL) -m 755 -d $(TARGET_DIR)/etc
