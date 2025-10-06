@@ -32,6 +32,13 @@ while true; do
             echo "Deleting $OLDEST_FILE ..."
             rm -f "$OLDEST_FILE"
 
+            # Check if parent directory is empty and remove it
+            PARENT_DIR=$(dirname "$OLDEST_FILE")
+            if [ "$(ls -A "$PARENT_DIR")" = "" ]; then
+                echo "Directory $PARENT_DIR is empty, removing it ..."
+                rmdir "$PARENT_DIR"
+            fi
+
             # Recalculate usage
             USAGE=$(df -h "$DEVICE" | awk 'NR==2 {gsub("%","",$5); print $5}')
         done
