@@ -1,2 +1,5 @@
 vfat
 exfat
+scsi_mod
+sd_mod
+usb-storage
