@@ -104,4 +104,58 @@ if [ "$1" = "ec25" ]; then
 	sleep 2
 	exit 0
 fi
+
+# Huawei E3372H as wwan0
+if [ "$1" = "e3372" ]; then
+
+    LOGFILE="/tmp/e3372"
+
+    log() {
+        echo "$(date '+%Y-%m-%d %H:%M:%S')  $1" >> "$LOGFILE"
+    }
+
+    HAS_14FE=0
+    HAS_1506=0
+
+    for i in $(seq 1 30); do
+        if lsusb | grep -q "12d1:14fe"; then
+            HAS_14FE=1
+        fi
+        if lsusb | grep -q "12d1:1506"; then
+            HAS_1506=1
+        fi
+
+        if [ "$HAS_14FE" -eq 1 ] || [ "$HAS_1506" -eq 1 ]; then
+            log "Modem detected after ${i}s"
+            break
+        fi
+
+        log "Waiting for modem... ${i}s"
+        sleep 1
+    done
+
+    # If still not found after 60s → exit
+    if [ "$HAS_14FE" -eq 0 ] && [ "$HAS_1506" -eq 0 ]; then
+        log "Modem not detected after 60 seconds, exiting"
+        exit 1
+    fi
+
+    # If only storage mode present → switch it
+    if [ "$HAS_14FE" -eq 1 ] && [ "$HAS_1506" -eq 0 ]; then
+        log "Storage mode detected, running usb_modeswitch"
+        usb_modeswitch -v 0x12d1 -p 0x14fe -c /usr/share/usb_modeswitch/12d1:14fe >> "$LOGFILE" 2>&1
+        sleep 3
+        log "usb_modeswitch finished"
+    else
+        log "Modem already in huawei_cdc_ncm"
+    fi
+	modprobe huawei_cdc_ncm
+    modprobe option >> "$LOGFILE" 2>&1
+    sleep 1
+	echo -e "AT^NDISDUP=1,1,\"o2internet\"\r" | socat - /dev/cdc-wdm0
+	sleep 1
+    ifup wwan0 >> "$LOGFILE" 2>&1
+    exit 0
+fi
+
 exit 1
