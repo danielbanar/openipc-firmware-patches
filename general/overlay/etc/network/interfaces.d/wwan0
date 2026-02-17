@@ -1,4 +1,1 @@
-auto wwan0
-iface wwan0 inet manual
-    up /etc/wireless/e3372_dhcp
-    down ip addr flush dev wwan0
+iface wwan0 inet dhcp
