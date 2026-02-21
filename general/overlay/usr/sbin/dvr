@@ -1,0 +1,68 @@
+#!/bin/sh
+
+# Read DVR flag from firmware environment
+dvr="$(fw_printenv -n dvr 2>/dev/null | tr '[:upper:]' '[:lower:]')"
+
+# Only run the loop if $dvr is "1" or "true"
+if [ "$dvr" != "1" ] && [ "$dvr" != "true" ]; then
+    echo "DVR is disabled (fw_printenv dvr=$dvr). Exiting."
+    exit 0
+fi
+
+# Get output directory template from cli (includes /%F)
+OUTPUT_TEMPLATE="$(cli -g .records.path 2>/dev/null)"
+
+if [ -z "$OUTPUT_TEMPLATE" ]; then
+    echo "Error: Could not read records path from cli."
+    exit 1
+fi
+
+# Extract base mount directory (remove /%F only for mount check)
+BASE_DIR="${OUTPUT_TEMPLATE%/%F}"
+
+RTSP_URL="rtsp://127.0.0.1/stream=1"
+RESTART_DELAY=5
+
+# Check if base directory exists
+if [ ! -d "$BASE_DIR" ]; then
+    echo "Error: Directory $BASE_DIR does not exist."
+    exit 1
+fi
+
+# Check if directory is mounted
+if ! mountpoint -q "$BASE_DIR"; then
+    echo "Error: $BASE_DIR is not a mounted drive."
+    exit 1
+fi
+
+echo "Starting recording loop..."
+
+while true; do
+    # Create today's folder from template
+    TODAY_DIR="$(date +%F)"
+    mkdir -p "${BASE_DIR}/${TODAY_DIR}"
+
+    # Start ffmpeg recording
+    ffmpeg -rtsp_transport tcp \
+           -fflags +genpts \
+           -use_wallclock_as_timestamps 0 \
+           -i "$RTSP_URL" \
+           -c copy \
+           -f segment \
+           -segment_time 300 \
+           -reset_timestamps 0 \
+           -strftime 1 \
+           "${OUTPUT_TEMPLATE}/dvr_%Y%m%d_%H%M%S.mkv"
+
+    EXIT_CODE=$?
+    echo "ffmpeg exited with code $EXIT_CODE"
+
+    echo "Restarting in $RESTART_DELAY seconds..."
+    sleep $RESTART_DELAY
+
+    # Re-check mount before restarting
+    if ! mountpoint -q "$BASE_DIR"; then
+        echo "Drive is no longer mounted. Waiting..."
+        sleep $RESTART_DELAY
+    fi
+done
