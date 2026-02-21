@@ -104,4 +104,42 @@ if [ "$1" = "ec25" ]; then
 	sleep 2
 	exit 0
 fi
+
+# Huawei E3372H as wwan0
+if [ "$1" = "e3372" ]; then
+
+	MODE="none"
+
+	for i in $(seq 1 20); do
+		if lsusb | grep -q "12d1:1506"; then
+			MODE="modem"
+		elif lsusb | grep -q "12d1:14fe"; then
+			MODE="storage"
+		fi
+
+		[ "$MODE" != "none" ] && break
+		sleep 1
+	done
+
+	if [ "$MODE" = "none" ]; then
+		echo "E3372 not detected"
+		exit 1
+	fi
+
+	echo "E3372 detected after ${i}s (mode: $MODE)"
+
+	if [ "$MODE" = "storage" ]; then
+		usb_modeswitch -v 0x12d1 -p 0x14fe -c /usr/share/usb_modeswitch/12d1:14fe
+		sleep 3
+	fi
+
+	modprobe huawei_cdc_ncm
+	modprobe option
+	sleep 1
+	echo -e "AT^NDISDUP=1,1\r" | socat - /dev/cdc-wdm0 # Big thanks to this guy on random russian forum https://4pda.to/forum/index.php?showtopic=475491&st=11320
+	sleep 1
+	ifup wwan0
+	exit 0
+fi
+
 exit 1
