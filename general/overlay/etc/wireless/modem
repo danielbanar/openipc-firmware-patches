@@ -79,7 +79,7 @@ fi
 if [ "$1" = "sim7600g" ]; then
 	modprobe rndis_host
 	modprobe option
-	echo "1e0e 9011" > /sys/bus/usb-serial/drivers/option1/new_id
+	echo "1e0e 9011" >/sys/bus/usb-serial/drivers/option1/new_id
 	sleep 2
 	ifup usb0
 	sleep 2
@@ -108,52 +108,38 @@ fi
 # Huawei E3372H as wwan0
 if [ "$1" = "e3372" ]; then
 
-    LOGFILE="/tmp/e3372"
+	MODE="none"
 
-    log() {
-        echo "$(date '+%Y-%m-%d %H:%M:%S')  $1" >> "$LOGFILE"
-    }
+	for i in $(seq 1 20); do
+		if lsusb | grep -q "12d1:1506"; then
+			MODE="modem"
+		elif lsusb | grep -q "12d1:14fe"; then
+			MODE="storage"
+		fi
 
-    HAS_14FE=0
-    HAS_1506=0
+		[ "$MODE" != "none" ] && break
+		sleep 1
+	done
 
-    for i in $(seq 1 30); do
-        if lsusb | grep -q "12d1:14fe"; then
-            HAS_14FE=1
-        fi
-        if lsusb | grep -q "12d1:1506"; then
-            HAS_1506=1
-        fi
+	if [ "$MODE" = "none" ]; then
+		echo "E3372 not detected"
+		exit 1
+	fi
 
-        if [ "$HAS_14FE" -eq 1 ] || [ "$HAS_1506" -eq 1 ]; then
-            log "Modem detected after ${i}s"
-            break
-        fi
+	echo "E3372 detected after ${i}s (mode: $MODE)"
 
-        log "Waiting for modem... ${i}s"
-        sleep 1
-    done
+	if [ "$MODE" = "storage" ]; then
+		usb_modeswitch -v 0x12d1 -p 0x14fe -c /usr/share/usb_modeswitch/12d1:14fe
+		sleep 3
+	fi
 
-    if [ "$HAS_14FE" -eq 0 ] && [ "$HAS_1506" -eq 0 ]; then
-        log "Modem not detected after 60 seconds, exiting"
-        exit 1
-    fi
-
-    if [ "$HAS_14FE" -eq 1 ] && [ "$HAS_1506" -eq 0 ]; then
-        log "Storage mode detected, running usb_modeswitch"
-        usb_modeswitch -v 0x12d1 -p 0x14fe -c /usr/share/usb_modeswitch/12d1:14fe >> "$LOGFILE" 2>&1
-        sleep 3
-        log "usb_modeswitch finished"
-    else
-        log "Modem already in huawei_cdc_ncm"
-    fi
 	modprobe huawei_cdc_ncm
-    modprobe option >> "$LOGFILE" 2>&1
-    sleep 1
-	echo -e "AT^NDISDUP=1,1,\"o2internet\"\r" | socat - /dev/cdc-wdm0 # Big thanks to this guy on random russian forum https://4pda.to/forum/index.php?showtopic=475491&st=11320
+	modprobe option
 	sleep 1
-    ifup wwan0 >> "$LOGFILE" 2>&1
-    exit 0
+	echo -e "AT^NDISDUP=1,1\r" | socat - /dev/cdc-wdm0 # Big thanks to this guy on random russian forum https://4pda.to/forum/index.php?showtopic=475491&st=11320
+	sleep 1
+	ifup wwan0
+	exit 0
 fi
 
 exit 1
