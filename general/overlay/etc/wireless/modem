@@ -79,7 +79,7 @@ fi
 if [ "$1" = "sim7600g" ]; then
 	modprobe rndis_host
 	modprobe option
-	echo "1e0e 9011" >/sys/bus/usb-serial/drivers/option1/new_id
+	echo "1e0e 9011" > /sys/bus/usb-serial/drivers/option1/new_id
 	sleep 2
 	ifup usb0
 	sleep 2
