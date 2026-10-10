@@ -20,13 +20,13 @@ set_wireless() {
 }
 
 start() {
-	echo "Starting network..."
+	echo "Starting wireless..."
 	ifup lo
 	if [ -n "$dev" ]; then
 		set_wireless
-	else
-		ifup eth0
 	fi
+	echo "Starting ethernet..."
+	ifup eth0
 }
 
 stop() {
