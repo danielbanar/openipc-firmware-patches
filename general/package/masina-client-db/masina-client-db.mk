@@ -16,6 +16,7 @@ define MASINA_CLIENT_DB_INSTALL_TARGET_CMDS
 	$(INSTALL) -m 755 -t $(TARGET_DIR)/usr/bin $(@D)/masinaclient
 	$(INSTALL) -m 755 -t $(TARGET_DIR)/usr/bin $(@D)/masinatelemetry
 	$(INSTALL) -m 755 -t $(TARGET_DIR)/usr/bin $(@D)/modem_link
+	$(INSTALL) -m 755 -t $(TARGET_DIR)/usr/bin $(@D)/modem_alink
 	$(INSTALL) -m 755 -t $(TARGET_DIR)/usr/bin $(@D)/update_masina
 
 	$(INSTALL) -m 755 -d $(TARGET_DIR)/etc
@@ -25,6 +26,7 @@ define MASINA_CLIENT_DB_INSTALL_TARGET_CMDS
 	$(INSTALL) -m 755 -t $(TARGET_DIR)/etc/init.d $(@D)/S90masinaclient
 	$(INSTALL) -m 755 -t $(TARGET_DIR)/etc/init.d $(@D)/S91masinatelemetry
 	$(INSTALL) -m 755 -t $(TARGET_DIR)/etc/init.d $(@D)/S92modemlink
+	$(INSTALL) -m 755 -t $(TARGET_DIR)/etc/init.d $(@D)/S93modemalink
 endef
 
 $(eval $(generic-package))
