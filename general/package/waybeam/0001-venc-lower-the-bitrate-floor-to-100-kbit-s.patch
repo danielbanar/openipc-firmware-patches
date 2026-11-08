@@ -1,0 +1,48 @@
+From 230b0787991b02144c3a825e29fe492f344cd913 Mon Sep 17 00:00:00 2001
+From: Daniel Banar <daniel.banar5@gmail.com>
+Date: Sun, 8 Nov 2026 01:43:27 +0100
+Subject: [PATCH] venc: lower the bitrate floor to 100 kbit/s
+
+VENC_BITRATE_MIN_KBPS 1000 -> 100, so an adaptive-link controller can
+go below 1 Mbit/s. Tested on SSC338Q/IMX415, 1440p60, CBR, resilience
+off: the driver's MaxBitrate follows 700/500/300/200/100; with a scene
+the encoder has to work for, 1000/500/300 kbit/s were held at
+1.01/0.99/0.99x (1 s peaks <= 1.06x), 60 fps, no decode errors. Not
+tested with SVC-T (refPred) resilience presets.
+
+Built without the OpenIPC toolchain (Bootlin armv7-eabihf glibc 2026.08,
+make build SOC_BUILD=star6e STAR6E_CC=... TOOLCHAIN_TARGET=), with
+CFLAGS "-fno-stack-protector -D_FORTIFY_SOURCE=0" (the stack protector
+trips on the ISP bin load: the vendor lib writes past a waybeam stack
+struct) and sqrtf/atan2f/asinf pinned to GLIBC_2.4 (camera glibc 2.38).
+---
+ include/venc_config.h | 10 +++++++---
+ 1 file changed, 7 insertions(+), 3 deletions(-)
+
+diff --git a/include/venc_config.h b/include/venc_config.h
+index e4833df..5a2ebbd 100644
+--- a/include/venc_config.h
++++ b/include/venc_config.h
+@@ -27,13 +27,17 @@ extern "C" {
+ #define VENC_OUTPUT_PAYLOAD_MIN_BYTES 576
+ 
+ /* Practical VENC bitrate bounds (kbps).  The min floor guards against
+- * impractically low targets the encoder can't honor — below ~1 Mbit/s the
+- * H.26x stream collapses (decoder drops SVC-T, RC oscillates).  Enforced as a
++ * impractically low targets the encoder can't honor.  Upstream uses 1000
++ * (below ~1 Mbit/s the H.26x stream collapsed: decoder drops SVC-T, RC
++ * oscillates).  Lowered to 100 for adaptive-link use: on SSC338Q/IMX415 at
++ * 1440p60 CBR, resilience off, targets of 1000/500/300 were held at
++ * 1.01/0.99/0.99x (1 s peaks <= 1.06x), 60 fps, no decode errors.  SVC-T
++ * (refPred resilience presets) not tested at these rates.  Enforced as a
+  * clamp (not a /set reject, so adaptive-link controllers that push low targets
+  * keep working, just floored) on both the live apply_bitrate() paths and the
+  * boot/reinit pipeline paths, so a persisted sub-floor bitrate can't birth the
+  * encoder collapsed. */
+-#define VENC_BITRATE_MIN_KBPS 1000
++#define VENC_BITRATE_MIN_KBPS 100
+ #define VENC_BITRATE_MAX_KBPS 200000
+ 
+ /* Requested H.265 slices per picture.  A sanity bound, NOT the delivered
+-- 
+2.39.5
