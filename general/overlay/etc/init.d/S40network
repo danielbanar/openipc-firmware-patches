@@ -19,9 +19,19 @@ set_wireless() {
 	[ -e /sys/class/net/eth0 ] && ifconfig eth0 "${net:-192.168.2.10}" hw ether "$(get_mac eth0)" up
 }
 
+detect_modem() {
+	case "$(lsusb)" in
+		*12d1:1506*|*12d1:14fe*) dev=e3372 ;;
+		*12d1:1f01*) dev=rndis-e3372h ;;
+		*1e0e:9011*) dev=sim7600g ;;
+		*2c7c:0125*) dev=rndis-ec25 ;;
+	esac
+}
+
 start() {
 	echo "Starting wireless..."
 	ifup lo
+	detect_modem
 	if [ -n "$dev" ]; then
 		set_wireless
 	fi

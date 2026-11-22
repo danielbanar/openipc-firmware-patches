@@ -4,8 +4,9 @@
 #
 ################################################################################
 
-MASINA_CLIENT_DB_SITE = $(call github,danielbanar,masina-client,$(MASINA_CLIENT_DB_VERSION))
-MASINA_CLIENT_DB_VERSION = HEAD
+MASINA_CLIENT_DB_SITE = https://github.com/danielbanar/masina-client.git
+MASINA_CLIENT_DB_SITE_METHOD = git
+MASINA_CLIENT_DB_VERSION = alink-ladder-link-only 
 
 define MASINA_CLIENT_DB_BUILD_CMDS
 	$(MAKE) OUTPUT=$(@D) -C $(@D)
